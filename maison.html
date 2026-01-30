@@ -52,16 +52,13 @@
     <div id="view-wrapper">
         <img src="" id="plan-img" onclick="handleImgClick(event)">
         <div id="panorama"></div>
-        <svg id="svg-overlay" viewBox="0 0 100 100" preserveAspectRatio="none" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10;">
-            <polygon id="draw-line" points="" style="stroke: #ef4444; stroke-width: 0.5; fill: rgba(239, 68, 68, 0.3);"></polygon>
-        </svg>
     </div>
     <div class="mt-2 d-flex justify-content-between"><div id="current-room-temp" class="badge bg-primary">--°C</div><div id="sync-info" class="small text-white-50"></div></div>
 </div>
 
 <div class="fab-container">
     <button class="fab bg-warning" id="fab-edit" onclick="toggleEdit()"><i class="fas fa-pen"></i></button>
-    <button class="fab bg-success" id="fab-save" style="display:none" onclick="saveToHA()"><i class="fas fa-save"></i></button>
+    <button class="fab bg-success" id="fab-save" style="display:none" onclick="saveHotspots()"><i class="fas fa-save"></i> SAUVEGARDER</button>
 </div>
 
 <div class="modal-advanced" id="hotspotModal">
@@ -78,108 +75,70 @@
 
 <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 <script>
-const HA_URL = "https://qq5e0tspgj2a22alvsqitgptzj2sz0o4.ui.nabu.casa";
-const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyM2QwMGZhNDdhYzM0NTgzYmFlM2UzMGRiMWMwMzBjMyIsImlhdCI6MTc2OTQyNzk1MiwiZXhwIjoyMDg0Nzg3OTUyfQ.qCik3fu6D-CqVg6RVuoQjF4g8zbM2ZXtYu3LVxrGVEs";
 const ROOMS = [
-    { n: "Cuisine", icon: "🍳", img: "Cuisine.jpg", img360: "Cuisine__1.jpg", store: "var.plan_cuisine_data", store360: "var.plan_cuisine_360", temp: "sensor.temperature_cuisine_2" },
-    { n: "Salon", icon: "🛋️", img: "Salon.jpg", store: "var.plan_salon_data", temp: "sensor.temp_salon" },
-    { n: "Elisa", icon: "🌸", img: "Elisa.jpg", store: "var.plan_chambre1_data", temp: "sensor.current_temperature_chambre_elisa" },
-    { n: "Justine", icon: "⭐", img: "Justine.jpg", store: "var.plan_chambre2_data", temp: "sensor.sensor_temp_justine" },
-    { n: "Parents", icon: "👥", img: "Chambreparents.jpg", store: "var.plan_chambre3_data", temp: "sensor.current_temperature_chambre_parent" }
+    { n: "Cuisine", img: "Cuisine.jpg", img360: "Cuisine__1.jpg" },
+    { n: "Salon", img: "Salon.jpg", img360: "Salon.jpg" },
+    { n: "Elisa", img: "Elisa.jpg", img360: "Elisa.jpg" },
+    { n: "Justine", img: "Justine.jpg", img360: "Justine.jpg" },
+    { n: "Parents", img: "Chambreparents.jpg", img360: "Chambreparents.jpg" }
 ];
 
-let curR = 0, zones = [], hotspots = [], editMode = false, is360Active = false, panoViewer = null, currentDrawingPoints = [];
-const headers = {"Authorization": `Bearer ${TOKEN}`, "Content-Type": "application/json"};
+let curR = 0, hotspots = [], editMode = false, is360Active = false, panoViewer = null;
 
 async function init() { renderRooms(); await switchRoom(0); }
 
 function renderRooms() {
     document.getElementById('rooms-container').innerHTML = ROOMS.map((r, i) => `
         <div class="room-card ${i === curR ? 'active' : ''}" onclick="switchRoom(${i})">
-            <div class="fw-bold">${r.icon} ${r.n}</div>
-            <div class="small opacity-75" id="temp-${i}">--°C</div>
+            <div class="fw-bold">${r.n}</div>
         </div>`).join('');
 }
 
 async function switchRoom(idx) {
-    curR = idx; renderRooms();
+    curR = idx;
+    renderRooms();
     const room = ROOMS[curR];
     document.getElementById('current-room-name').innerText = room.n;
     document.getElementById('plan-img').src = room.img;
     
     try {
-        // LECTURE SÉCURISÉE
-        const res2d = await fetch(`${HA_URL}/api/states/${room.store}`, {headers});
-        const d2d = await res2d.json();
-        // On essaie de lire l'attribut 'data', sinon l'état
-        let raw2d = (d2d.attributes && d2d.attributes.data) ? d2d.attributes.data : d2d.state;
-        zones = (raw2d && raw2d.length > 5) ? JSON.parse(raw2d) : [];
+        const response = await fetch(`config_${room.n.toLowerCase()}.json?v=${new Date().getTime()}`);
+        const config = await response.json();
+        hotspots = config.hotspots || [];
         
-        if(room.store360) {
-            const res360 = await fetch(`${HA_URL}/api/states/${room.store360}`, {headers});
-            const d360 = await res360.json();
-            let raw360 = (d360.attributes && d360.attributes.data) ? d360.attributes.data : d360.state;
-            hotspots = (raw360 && raw360.length > 5) ? JSON.parse(raw360.state || raw360) : [];
-        } else { hotspots = []; }
-        
-        document.getElementById('sync-info').innerText = `Chargé: ${zones.length}z / ${hotspots.length}h`;
-        if(is360Active) initPannellum(); else drawZones();
-        updateTemp();
-    } catch(e) { zones = []; hotspots = []; console.error(e); }
+        document.getElementById('sync-info').innerText = `Chargé: ${hotspots.length} hotspots`;
+        if(is360Active) initPannellum();
+    } catch(e) {
+        hotspots = [];
+        console.error("Could not load config for room " + room.n, e);
+    }
 }
-
-async function updateTemp() {
-    try {
-        const res = await fetch(`${HA_URL}/api/states/${ROOMS[curR].temp}`, {headers});
-        const data = await res.json();
-        document.getElementById('current-room-temp').innerText = `${data.state || '--'}°C`;
-    } catch(e) {}
-}
-
-function drawZones() {
-    const svg = document.getElementById('svg-overlay');
-    svg.innerHTML = '<polygon id="draw-line" points="" style="stroke: #ef4444; stroke-width: 0.5; fill: rgba(239, 68, 68, 0.3);"></polygon>';
-    zones.forEach((z, i) => {
-        const p = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-        p.setAttribute('points', z.pts.map(pt => `${pt.x},${pt.y}`).join(' '));
-        p.style.cssText = `fill:${z.color || '#6366f1'}44; stroke:${z.color || '#6366f1'}; stroke-width:0.5; cursor:pointer; pointer-events:all;`;
-        p.onclick = (e) => { e.stopPropagation(); if(editMode) openHotspotModal(i, '2d'); else handleAction(z); };
-        svg.appendChild(p);
-    });
-}
-
-function handleImgClick(e) {
-    if(!editMode) return;
-    const rect = document.getElementById('plan-img').getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    currentDrawingPoints.push({x, y});
-    document.getElementById('draw-line').setAttribute('points', currentDrawingPoints.map(p => `${p.x},${p.y}`).join(' '));
-}
-
-document.getElementById('plan-img').ondblclick = () => {
-    if(!editMode || currentDrawingPoints.length < 2) return;
-    zones.push({ n: "Zone", pts: [...currentDrawingPoints], u: "", color: '#6366f1' });
-    currentDrawingPoints = [];
-    drawZones(); openHotspotModal(zones.length-1, '2d');
-};
 
 function initPannellum() {
     if(panoViewer) panoViewer.destroy();
+    const room = ROOMS[curR];
     panoViewer = pannellum.viewer('panorama', {
-        "type": "equirectangular", "panorama": ROOMS[curR].img360, "autoLoad": true, "showControls": false,
+        "type": "equirectangular",
+        "panorama": room.img360,
+        "autoLoad": true,
+        "showControls": false,
         "hotSpots": hotspots.map((h, i) => ({
-            pitch: h.pi, yaw: h.y, cssClass: 'custom-hotspot',
-            createTooltipFunc: (div) => { div.style.background = h.color || '#6366f1'; div.innerHTML = h.icon || '💡'; },
-            clickHandlerFunc: () => editMode ? openHotspotModal(i, '360') : handleAction(h)
+            pitch: h.pitch,
+            yaw: h.yaw,
+            cssClass: 'custom-hotspot',
+            createTooltipFunc: (div) => {
+                div.innerHTML = h.name || '💡';
+            },
+            clickHandlerFunc: () => editMode ? openHotspotModal(i) : handleAction(h)
         }))
     });
     panoViewer.on('mousedown', (e) => {
         if(!editMode) return;
         const coords = panoViewer.mouseEventToCoords(e);
         if(coords) {
-            hotspots.push({ n: "Hotspot", pi: coords[0], y: coords[1], u: "", icon: '💡', color: '#6366f1' });
-            initPannellum(); setTimeout(() => openHotspotModal(hotspots.length-1, '360'), 200);
+            hotspots.push({ name: "New Hotspot", pitch: coords[0], yaw: coords[1], entity_id: "" });
+            initPannellum();
+            setTimeout(() => openHotspotModal(hotspots.length-1), 200);
         }
     });
 }
@@ -188,37 +147,36 @@ function toggle360View() {
     is360Active = !is360Active;
     document.getElementById('panorama').style.display = is360Active ? 'block' : 'none';
     document.getElementById('plan-img').style.display = is360Active ? 'none' : 'block';
-    document.getElementById('svg-overlay').style.display = is360Active ? 'none' : 'block';
-    if(is360Active) initPannellum(); else drawZones();
+    if(is360Active) initPannellum();
 }
 
-async function handleAction(item) {
-    if(!item.u) return;
-    await fetch(`${HA_URL}/api/services/homeassistant/toggle`, { method:'POST', headers, body: JSON.stringify({entity_id: item.u}) });
+function handleAction(item) {
+    if(!item.entity_id) return;
+    // Your Home Assistant action logic here
+    console.log("Executing action for:", item.entity_id);
 }
 
-function openHotspotModal(idx, type) {
-    const item = (type === '360') ? hotspots[idx] : zones[idx];
+function openHotspotModal(idx) {
+    const item = hotspots[idx];
     document.getElementById('edit-idx').value = idx;
-    document.getElementById('edit-type').value = type;
-    document.getElementById('hotspot-name').value = item.n;
-    document.getElementById('hotspot-entity').value = item.u;
+    document.getElementById('hotspot-name').value = item.name;
+    document.getElementById('hotspot-entity').value = item.entity_id;
     document.getElementById('hotspotModal').style.display = 'block';
 }
 
 function confirmHotspot() {
     const idx = document.getElementById('edit-idx').value;
-    const type = document.getElementById('edit-type').value;
-    const item = (type === '360') ? hotspots[idx] : zones[idx];
-    item.n = document.getElementById('hotspot-name').value;
-    item.u = document.getElementById('hotspot-entity').value;
-    closeHotspotModal(); if(is360Active) initPannellum(); else drawZones();
+    hotspots[idx].name = document.getElementById('hotspot-name').value;
+    hotspots[idx].entity_id = document.getElementById('hotspot-entity').value;
+    closeHotspotModal();
+    initPannellum();
 }
 
 function deleteHotspot() {
     const idx = document.getElementById('edit-idx').value;
-    if(document.getElementById('edit-type').value === '360') hotspots.splice(idx, 1); else zones.splice(idx, 1);
-    closeHotspotModal(); if(is360Active) initPannellum(); else drawZones();
+    hotspots.splice(idx, 1);
+    closeHotspotModal();
+    initPannellum();
 }
 
 function toggleEdit() {
@@ -227,8 +185,8 @@ function toggleEdit() {
     document.getElementById('fab-save').style.display = editMode ? 'flex' : 'none';
 }
 
-async function saveToHA() {
-    const r = ROOMS[curR];
+async function saveHotspots() {
+    const room = ROOMS[curR];
     const bubble = document.getElementById('status-bubble');
     const msg = document.getElementById('status-message');
     
@@ -237,19 +195,24 @@ async function saveToHA() {
     msg.innerHTML = "Sauvegarde en cours...";
 
     try {
-        // SAUVEGARDE DANS L'ATTRIBUT 'data' (Pas de limite de caractères)
-        const payload2d = { entity_id: r.store, value: "updated", attributes: { data: JSON.stringify(zones) } };
-        const res1 = await fetch(`${HA_URL}/api/services/var/set`, { method:'POST', headers, body: JSON.stringify(payload2d) });
+        const response = await fetch('save_hotspots.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ room: room.n, hotspots: hotspots })
+        });
+        const result = await response.json();
 
-        if(r.store360) {
-            const payload360 = { entity_id: r.store360, value: "updated", attributes: { data: JSON.stringify(hotspots) } };
-            await fetch(`${HA_URL}/api/services/var/set`, { method:'POST', headers, body: JSON.stringify(payload360) });
+        if (result.status === 'success') {
+            bubble.style.background = 'var(--success)';
+            msg.innerHTML = "<b>RÉUSSI !</b><br>Hotspots sauvegardés.";
+            setTimeout(() => {
+                bubble.style.display = 'none';
+                toggleEdit();
+                // No reload needed, changes are in memory
+            }, 2000);
+        } else {
+            throw new Error(result.message);
         }
-
-        bubble.style.background = 'var(--success)';
-        msg.innerHTML = "<b>RÉUSSI !</b><br>Données sécurisées dans l'attribut.";
-        
-        setTimeout(() => { bubble.style.display = 'none'; toggleEdit(); location.reload(); }, 2000);
 
     } catch(err) {
         bubble.style.background = 'var(--danger)';
