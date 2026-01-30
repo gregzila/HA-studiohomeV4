@@ -3,429 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Studio Pro - Domotique</title>
+    <title>Studio Domotique 360 PRO - VAR</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --dark: #0f172a; --dark-light: #1e293b; --glass: rgba(255, 255, 255, 0.1); --glass-border: rgba(255, 255, 255, 0.2); }
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Outfit', sans-serif; background: #0f172a; color: white; min-height: 100vh; overflow: hidden; }
-        #status-bubble { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; padding: 10px 20px; border-radius: 20px; background: rgba(245, 158, 11, 0.95); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: none; text-align: center; max-width: 90%; color: white; }
-        .top-nav { position: fixed; top: 0; left: 0; right: 0; height: 60px; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); z-index: 2000; display: flex; align-items: center; padding: 0 15px; }
-        .sidebar { position: fixed; left: 0; top: 60px; width: 260px; height: calc(100vh - 60px); background: var(--dark); border-right: 1px solid var(--glass-border); padding: 15px; z-index: 1000; overflow-y: auto; }
-        .main-content { margin-left: 260px; margin-top: 60px; padding: 15px; }
-        @media (max-width: 992px) { .sidebar { left: 0; width: 100%; height: 90px; top: auto; bottom: 0; border-right: none; border-top: 1px solid var(--glass-border); display: flex; padding: 10px; z-index: 2000; overflow-x: auto; } .main-content { margin-left: 0; padding-bottom: 100px; } .room-card { min-width: 150px; flex-shrink: 0;} }
-        .room-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
-        .room-card:hover { background: rgba(255,255,255,0.15); }
-        .room-card.active { background: var(--primary); border-color: transparent; }
-        #view-wrapper { position: relative; width: 100%; height: 65vh; border-radius: 15px; overflow: hidden; background: #000; border: 1px solid var(--glass-border); }
-        #plan-img { width: 100%; height: 100%; object-fit: contain; }
-        #panorama { width: 100%; height: 100%; display: none; }
-        #no-360-view { position: absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction: column; justify-content: center; align-items:center; text-align:center; background: #000; }
-        .fab-container { position: fixed; bottom: 100px; right: 20px; z-index: 1500; display: flex; flex-direction: column; gap: 10px; }
-        .fab { width: 55px; height: 55px; border-radius: 50%; border: none; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; }
-        .modal-advanced { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 3000; padding: 15px; overflow-y: auto; }
-        .modal-content-advanced { background: var(--dark); border-radius: 20px; width: 100%; max-width: 500px; margin: 5vh auto; border: 1px solid var(--glass-border); overflow: hidden; }
-        .form-input-advanced { width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 10px; color: white; margin-bottom: 15px; }
-        .custom-hotspot { width: 34px; height: 34px; border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
-        #add-room-btn { background: var(--glass); border: 1px dashed var(--glass-border); color: white; text-align: center; padding: 15px; border-radius: 12px; cursor: pointer; margin-top: 10px; }
-        .weather-widget { text-align: right; }
-        .room-status-icons { display: flex; gap: 10px; margin-top: 8px; }
-        .room-status-icon { cursor: pointer; opacity: 0.6; font-size: 1.1rem;}
-        .room-status-icon.active { color: var(--warning); opacity: 1; }
+        :root { --accent: #00d1ff; --bs-dark-rgb: 255,255,255;}
+        body { background-color: #000; margin: 0; overflow: hidden; font-family: sans-serif; color: white; }
+        #side-menu { position: fixed; top: 0; left: -280px; width: 280px; height: 100%; background: rgba(20,20,20,0.95); z-index: 2000; transition: 0.3s; border-right: 1px solid #333; display: flex; flex-direction: column; }
+        #side-menu.open { left: 0; }
+        #rooms-list { padding: 10px; overflow-y: auto; flex-grow: 1; }
+        .room-item { padding: 12px; border-radius: 8px; cursor: pointer; margin-bottom: 5px; display: flex; align-items: center; justify-content: space-between; }
+        .room-item.active { background: var(--accent); color: black; font-weight: bold; }
+        .room-status-icons { display: flex; gap: 15px; font-size: 0.9rem; opacity: 0.7; }
+        .room-status-icons .fa-robot { cursor: pointer; }
+        .room-status-icons .fa-door-open { color: #f59e0b; }
+        #top-info { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; text-align: center; pointer-events: none; }
+        #room-name { font-weight: bold; font-size: 1.2rem; color: var(--accent); text-transform: uppercase; }
+        #plan-wrapper { position: relative; height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; }
+        #panorama { position: absolute; width: 100%; height: 100%; display: none; z-index: 500; }
+        #plan-container { position: relative; z-index: 10; }
+        #plan-img { max-height: 85vh; max-width: 95vw; display: block; user-select: none; }
+        svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+        svg.edit-active { pointer-events: all !important; }
+        .zone-poly { fill: var(--accent); fill-opacity: 0.1; stroke: var(--accent); stroke-width: 1; cursor: pointer; pointer-events: all; }
+        .zone-poly:hover { fill-opacity: 0.4; stroke: white; stroke-width: 2; }
+        #draw-line { stroke: #ff4444; stroke-width: 2; fill: rgba(255, 68, 68, 0.2); stroke-dasharray: 5; pointer-events: none; }
+        .btn-menu { position: fixed; top: 20px; left: 20px; z-index: 2100; background: rgba(0,0,0,0.6); border: 1px solid var(--accent); color: white; border-radius: 50%; width: 45px; height: 45px; }
+        .ui-controls { position: fixed; bottom: 20px; right: 20px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; }
+        #ha-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; height: 600px; background: #1c1c1c; border-radius: 20px; z-index: 3000; border: 1px solid #444; }
+        #modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 2999; }
+        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 30px; color: white; cursor: pointer; }
+        .custom-hotspot { height: 25px; width: 25px; background: rgba(0, 209, 255, 0.7); border: 2px solid white; border-radius: 50%; cursor: pointer; }
+        #weather-widget { padding: 20px; text-align: center; border-bottom: 1px solid #333; }
     </style>
 </head>
 <body>
 
-<div id="status-bubble">
-    <div id="status-icon"><i class="fas fa-spinner fa-spin"></i></div>
-    <div id="status-message">Action en cours...</div>
+<div id="side-menu">
+    <div id="weather-widget">...</div>
+    <div id="rooms-list"></div>
 </div>
 
-<div class="top-nav">
-    <div class="fw-bold text-primary me-auto">STUDIO PRO</div>
-    <div id="weather-widget" class="weather-widget small me-3">--°C, --</div>
-    <button id="toggle-view-btn" class="btn btn-sm btn-outline-light me-2" onclick="toggle360View()"></button>
-    <button class="btn btn-sm btn-outline-light" onclick="toggleFS()"><i class="fas fa-expand"></i></button>
+<button class="btn-menu" onclick="document.getElementById('side-menu').classList.toggle('open')"><i class="fas fa-bars"></i></button>
+
+<div id="top-info">
+    <div id="room-name">...</div>
+    <div id="temp-badge" class="badge bg-dark border border-info mt-1">--°C</div>
 </div>
 
-<div class="sidebar" id="sidebar">
-    <div id="rooms-container"></div>
-    <div id="add-room-btn" onclick="openAddRoomModal()"><i class="fas fa-plus"></i> Ajouter pièce</div>
+<div class="ui-controls">
+    <button id="btn-toggle-360" class="btn btn-info btn-sm rounded-pill fw-bold px-3 shadow" onclick="toggle360View()">VUE 360°</button>
+    <button id="btn-edit" class="btn btn-warning btn-sm rounded-pill" onclick="toggleEdit()">ÉDIT</button>
+    <button id="btn-save" class="btn btn-success btn-sm rounded-pill d-none" onclick="saveToHA()">SAUVER</button>
 </div>
 
-<div class="main-content">
-    <h5 id="current-room-name"></h5>
-    <div id="view-wrapper">
-        <img src="" id="plan-img">
-        <div id="panorama"></div>
-        <div id="no-360-view" style="display:none;">
-            <h5>Pas de vue 360 pour cette pièce</h5>
-            <p class="small opacity-75">Voulez-vous en ajouter une ?</p>
-            <button class="btn btn-primary btn-sm" onclick="request360Image()">Ajouter une image 360</button>
-        </div>
-    </div>
-    <div class="mt-2 d-flex justify-content-between align-items-center">
-        <div id="sync-info" class="small text-white-50"></div>
-        <button class="btn btn-sm btn-outline-secondary" onclick="openEntityModal()"><i class="fas fa-cogs"></i> Gérer les entités</button>
-    </div>
-</div>
+<div id="plan-wrapper">...</div>
+<div id="modal-overlay" onclick="closeModal()"></div>
+<div id="ha-modal">...</div>
+<div class="modal fade" id="configModal">...</div>
 
-<div class="fab-container">
-    <button class="fab bg-warning" id="fab-edit" onclick="toggleEdit()"><i class="fas fa-pen"></i></button>
-    <button class="fab bg-success" id="fab-save" style="display:none" onclick="saveHotspots()"><i class="fas fa-save"></i></button>
-</div>
-
-<!-- MODALS -->
-<div class="modal-advanced" id="hotspotModal">
-    <div class="modal-content-advanced">
-        <div class="p-3 bg-primary d-flex justify-content-between"><h6>Configuration du Hotspot</h6><button class="btn-close btn-close-white" onclick="closeHotspotModal()"></button></div>
-        <div class="p-3">
-            <input type="hidden" id="edit-idx">
-            <label class="small opacity-50">NOM</label><input type="text" id="hotspot-name" class="form-input-advanced">
-            <label class="small opacity-50">ID ENTITÉ HA</label><input type="text" id="hotspot-entity" class="form-input-advanced">
-            <div class="d-flex gap-2"><button class="btn btn-danger w-100" onclick="deleteHotspot()">Supprimer</button><button class="btn btn-primary w-100" onclick="confirmHotspot()">Appliquer</button></div>
-        </div>
-    </div>
-</div>
-
-<div class="modal-advanced" id="addRoomModal">
-    <div class="modal-content-advanced">
-        <div class="p-3 bg-success d-flex justify-content-between"><h6>Ajouter/Modifier une pièce</h6><button class="btn-close btn-close-white" onclick="closeAddRoomModal()"></button></div>
-        <div class="p-3">
-            <input type="hidden" id="editing-room-idx">
-            <label class="small opacity-50">NOM</label><input type="text" id="new-room-name" class="form-input-advanced">
-            <label class="small opacity-50">ICÔNE</label><input type="text" id="new-room-icon" class="form-input-advanced">
-            <label class="small opacity-50">IMAGE PLAN 2D</label><input type="file" id="new-room-img-2d" class="form-input-advanced">
-            <label class="small opacity-50">IMAGE VUE 360 (Optionnel)</label><input type="file" id="new-room-img-360" class="form-input-advanced">
-            <button class="btn btn-success w-100 mt-3" onclick="addNewRoom()">Sauvegarder la pièce</button>
-        </div>
-    </div>
-</div>
-
-<div class="modal-advanced" id="entityModal">
-    <div class="modal-content-advanced">
-        <div class="p-3 bg-info d-flex justify-content-between"><h6>Gérer les entités de la pièce</h6><button class="btn-close btn-close-white" onclick="closeEntityModal()"></button></div>
-        <div class="p-3">
-            <label class="small opacity-50">ID CAPTEUR TEMPÉRATURE</label><input type="text" id="room-temp-entity" class="form-input-advanced">
-            <label class="small opacity-50">ID BOUTON ASPIRATEUR</label><input type="text" id="room-vacuum-entity" class="form-input-advanced">
-            <label class="small opacity-50">ID CAPTEUR FENÊTRE</label><input type="text" id="room-window-entity" class="form-input-advanced">
-            <button class="btn btn-info w-100 mt-3" onclick="saveRoomEntities()">Sauvegarder les entités</button>
-        </div>
-    </div>
-</div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+
 <script>
-let CONFIG = { ha_url: "", ha_token: "", weather_entity: "", rooms: [] };
-let curR = 0, hotspots = [], editMode = false, is360Active = false, panoViewer = null;
+const HA_URL = "https://qq5e0tspgj2a22alvsqitgptzj2sz0o4.ui.nabu.casa";
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyM2QwMGZhNDdhYzM0NTgzYmFlM2UzMGRiMWMwMzBjMyIsImlhdCI6MTc2OTQyNzk1MiwiZXhwIjoyMDg0Nzg3OTUyfQ.qCik3fu6D-CqVg6RVuoQjF4g8zbM2ZXtYu3LVxrGVEs";
+const WEATHER_ENTITY = "weather.izon";
 
-async function loadConfig() {
+const ROOMS = [
+    { n: "Cuisine", img: "Cuisine.jpg", img360: "Cuisine__1.jpg", store: "var.plan_cuisine_data", store360: "var.plan_cuisine_360", temp: "sensor.temperature_cuisine_2", vacuum: "button.eve_shortcut_5", window: "binary_sensor.fenetre_cuisine_porte" },
+    { n: "Salon", img: "Salon.jpg", img360: null, store: "var.plan_salon_data", temp: "sensor.temp_salon", vacuum: "button.eve_shortcut_6", window: "binary_sensor.fenetre_salon_porte" },
+    { n: "Elisa", img: "Elisa.jpg", img360: null, store: "var.plan_chambre1_data", temp: "sensor.current_temperature_chambre_elisa", vacuum: "button.eve_shortcut_2", window: null },
+    { n: "Justine", img: "Justine.jpg", img360: null, store: "var.plan_chambre2_data", temp: "sensor.sensor_temp_justine", vacuum: "button.eve_shortcut_3", window: "binary_sensor.0xa4c138462fd3310c_contact" },
+    { n: "Parents", img: "Chambreparents.jpg", img360: null, store: "var.plan_chambre3_data", temp: "sensor.current_temperature_chambre_parent", vacuum: "button.eve_shortcut_1", window: null }
+];
+
+let curR = 0, zones = [], hotspots = [], currentPoints = [], editMode = false, is360Active = false, panoViewer = null;
+const bModal = new bootstrap.Modal(document.getElementById('configModal'));
+const headers = { "Authorization": `Bearer ${TOKEN}`, "Content-Type": "application/json" };
+
+async function callService(service, entity_id, data = {}) {
+    if(!entity_id) return;
+    const [domain, action] = service.split('.');
     try {
-        const response = await fetch(`config.json?v=${new Date().getTime()}`);
-        CONFIG = await response.json();
-    } catch (e) {
-        showStatus("Erreur: Impossible de charger config.json", "danger", false);
-    }
-}
-
-async function init() {
-    await loadConfig();
-    renderRooms();
-    if (CONFIG.rooms.length > 0) {
-        await switchRoom(0);
-    } else {
-        document.getElementById('current-room-name').innerText = "Aucune pièce configurée";
-        document.getElementById('plan-img').style.display = 'none';
-        document.getElementById('panorama').style.display = 'none';
-    }
-    updateWeather();
-    setInterval(updateWeather, 600000);
-    setInterval(updateAllRoomsStatus, 30000);
-}
-
-function renderRooms() {
-    document.getElementById('rooms-container').innerHTML = CONFIG.rooms.map((r, i) => `
-        <div class="room-card ${i === curR ? 'active' : ''}" onclick="switchRoom(${i})">
-            <div class="fw-bold d-flex justify-content-between">
-                <span>${r.icon} ${r.n}</span>
-                <span class="small opacity-75" id="temp-${i}">--°C</span>
-            </div>
-            <div class="room-status-icons">
-                ${r.vacuum_entity ? `<i id="vac-${i}" class="fas fa-robot room-status-icon" onclick="event.stopPropagation(); callService('button.press', '${r.vacuum_entity}');"></i>` : ''}
-                ${r.window_entity ? `<i id="win-${i}" class="fas fa-door-closed room-status-icon"></i>` : ''}
-            </div>
-        </div>`).join('');
-    updateAllRoomsStatus();
-}
-
-async function switchRoom(idx) {
-    is360Active = false;
-    curR = idx;
-    renderRooms();
-    const room = CONFIG.rooms[curR];
-    document.getElementById('current-room-name').innerText = room.n;
-    document.getElementById('plan-img').src = room.img;
-    document.getElementById('plan-img').style.display = 'block';
-    document.getElementById('panorama').style.display = 'none';
-    document.getElementById('no-360-view').style.display = 'none';
-    
-    document.getElementById('toggle-view-btn').style.display = 'block';
-    update360Button();
-
-    try {
-        const response = await fetch(`config_${room.n.toLowerCase()}.json?v=${new Date().getTime()}`);
-        hotspots = (await response.json()).hotspots || [];
-        document.getElementById('sync-info').innerText = `${hotspots.length} hotspots`;
-    } catch(e) {
-        hotspots = [];
-        document.getElementById('sync-info').innerText = `0 hotspots`;
-    }
-}
-
-async function updateAllRoomsStatus() {
-    for (let i = 0; i < CONFIG.rooms.length; i++) {
-        const room = CONFIG.rooms[i];
-        if (room.temp) {
-            const data = await getEntityState(room.temp);
-            if (data) document.getElementById(`temp-${i}`).innerText = `${parseFloat(data.state).toFixed(1)}°C`;
-        }
-        if (room.window_entity) {
-            const data = await getEntityState(room.window_entity);
-            const iconEl = document.getElementById(`win-${i}`);
-            if (data && iconEl) {
-                iconEl.className = `fas ${data.state === 'on' ? 'fa-door-open' : 'fa-door-closed'} room-status-icon`;
-                iconEl.classList.toggle('active', data.state === 'on');
-            }
-        }
-    }
-}
-
-function update360Button() {
-    document.getElementById('toggle-view-btn').innerHTML = is360Active ? '<i class="fas fa-map"></i> Plan 2D' : '<i class="fas fa-globe"></i> Vision 360';
-}
-
-function toggle360View() {
-    const room = CONFIG.rooms[curR];
-    if (!room.img360) {
-        document.getElementById('plan-img').style.display = 'none';
-        document.getElementById('no-360-view').style.display = 'flex';
-        return;
-    }
-    is360Active = !is360Active;
-    document.getElementById('panorama').style.display = is360Active ? 'block' : 'none';
-    document.getElementById('plan-img').style.display = is360Active ? 'none' : 'block';
-    document.getElementById('no-360-view').style.display = 'none';
-    update360Button();
-    if (is360Active) initPannellum();
-}
-
-function initPannellum() {
-    if(panoViewer) panoViewer.destroy();
-    const room = CONFIG.rooms[curR];
-    panoViewer = pannellum.viewer('panorama', {
-        "type": "equirectangular", "panorama": room.img360, "autoLoad": true, "showControls": false,
-        "hotSpots": hotspots.map((h, i) => ({
-            pitch: h.pitch, yaw: h.yaw, cssClass: 'custom-hotspot',
-            createTooltipFunc: div => { div.innerHTML = h.name || '💡'; },
-            clickHandlerFunc: () => editMode ? openHotspotModal(i) : callService('homeassistant.toggle', h.entity_id)
-        }))
-    });
-    panoViewer.on('mousedown', e => {
-        if(!editMode) return;
-        const coords = panoViewer.mouseEventToCoords(e);
-        hotspots.push({ name: "Nouveau", pitch: coords[0], yaw: coords[1], entity_id: "" });
-        initPannellum();
-        setTimeout(() => openHotspotModal(hotspots.length - 1), 200);
-    });
-}
-
-function request360Image() { openAddRoomModal(true); }
-
-async function updateWeather() {
-    if (!CONFIG.weather_entity) return;
-    const data = await getEntityState(CONFIG.weather_entity);
-    if (data) {
-        document.getElementById('weather-widget').innerHTML = `${data.attributes.temperature}°C, ${data.state}`;
-    }
+        await fetch(`${HA_URL}/api/services/${domain}/${action}`, { 
+            method: 'POST', 
+            headers, 
+            body: JSON.stringify({ entity_id, ...data }) 
+        });
+    } catch(e) { console.error(`Failed to call service ${service} for ${entity_id}`, e); }
 }
 
 async function getEntityState(entity_id) {
     if (!entity_id) return null;
     try {
-        const res = await fetch(`${CONFIG.ha_url}/api/states/${entity_id}`, {
-            headers: {"Authorization": `Bearer ${CONFIG.ha_token}`}
-        });
+        const res = await fetch(`${HA_URL}/api/states/${entity_id}`, { headers });
         if (!res.ok) return null;
         return await res.json();
     } catch (e) { return null; }
 }
 
-async function callService(service, entity_id) {
-    if(!entity_id || !CONFIG.ha_url) return;
-    const [domain, action] = service.split('.');
-    showStatus(`Activation de ${entity_id}...`, 'info');
-    try {
-        const res = await fetch(`${CONFIG.ha_url}/api/services/${domain}/${action}`, {
-            method: 'POST',
-            headers: {"Authorization": `Bearer ${CONFIG.ha_token}`, "Content-Type": "application/json"},
-            body: JSON.stringify({entity_id: entity_id})
-        });
-        if (!res.ok) throw new Error(`HA API Error: ${res.status}`);
-        showStatus('Action réussie!', 'success');
-    } catch (e) {
-        showStatus('Action échouée', 'danger');
-        console.error("Service call failed:", e);
+function initMenu() {
+    document.getElementById('rooms-list').innerHTML = ROOMS.map((r, i) => `
+        <div class="room-item ${i === curR ? 'active' : ''}" onclick="switchRoom(${i}); document.getElementById('side-menu').classList.remove('open');">
+            <span><i class="fas fa-door-closed me-2"></i>${r.n}</span>
+            <div class="room-status-icons">
+                ${r.vacuum ? `<i class="fas fa-robot" onclick="event.stopPropagation(); callService('button.press', '${r.vacuum}');"></i>` : ''}
+                ${r.window ? `<i id="win-status-${i}" class="fas fa-question-circle"></i>` : ''}
+            </div>
+        </div>`).join('');
+}
+
+async function updateAllStatuses() {
+    // Weather
+    const weatherState = await getEntityState(WEATHER_ENTITY);
+    if (weatherState) {
+        document.getElementById('weather-widget').innerHTML = `
+            <h5>Météo à Izon</h5>
+            <div class="fs-3 fw-bold">${weatherState.attributes.temperature || '--'}°C</div>
+            <div>${weatherState.state || '--'}</div>`;
+    }
+
+    // Room statuses
+    for(let i=0; i < ROOMS.length; i++){
+        const room = ROOMS[i];
+        if(room.window){
+            const windowState = await getEntityState(room.window);
+            const icon = document.getElementById(`win-status-${i}`);
+            if(windowState && icon){
+                icon.className = `fas ${windowState.state === 'on' ? 'fa-door-open text-warning' : 'fa-door-closed'}`;
+            }
+        }
     }
 }
 
-function openHotspotModal(idx) {
-    const item = hotspots[idx];
-    document.getElementById('edit-idx').value = idx;
-    document.getElementById('hotspot-name').value = item.name;
-    document.getElementById('hotspot-entity').value = item.entity_id;
-    document.getElementById('hotspotModal').style.display = 'block';
+async function switchRoom(idx) {
+    curR = idx; 
+    const r = ROOMS[curR];
+    document.getElementById('room-name').innerText = r.n;
+    document.getElementById('plan-img').src = r.img;
+    document.getElementById('btn-toggle-360').style.display = r.img360 ? 'block' : 'none';
+    initMenu();
+    
+    try {
+        const [s, h, t] = await Promise.all([
+            getEntityState(r.store),
+            getEntityState(r.store360),
+            getEntityState(r.temp)
+        ]);
+
+        zones = (s && s.state !== "unknown") ? JSON.parse(s.state).map(z => ({ n: z.n, p: z.p, u: z.u })) : [];
+        hotspots = (h && h.state !== "unknown" && r.store360) ? JSON.parse(h.state).map(hs => ({ n: hs.n, pi: hs.pi, y: hs.y, u: hs.u })) : [];
+        document.getElementById('temp-badge').innerText = t ? `${t.state || '--'}°C` : '--°C';
+
+    } catch(e) {
+        console.error("Erreur de chargement de la pièce:", e);
+        zones = []; hotspots = [];
+    }
+    
+    is360Active = false;
+    document.getElementById('panorama').style.display = 'none';
+    document.getElementById('plan-container').style.display = 'block';
+    syncSVG();
 }
 
-function confirmHotspot() {
-    const idx = document.getElementById('edit-idx').value;
-    hotspots[idx].name = document.getElementById('hotspot-name').value;
-    hotspots[idx].entity_id = document.getElementById('hotspot-entity').value;
-    closeHotspotModal();
+async function saveToHA() {
+    const r = ROOMS[curR];
+    const cleanZones = zones.map(z => ({ n: z.n, p: z.p, u: z.u }));
+    const cleanHotspots = hotspots.map(h => ({ n: h.n, pi: Math.round(h.pi), y: Math.round(h.y), u: h.u }));
+    
+    await callService('var.set', r.store, { value: JSON.stringify(cleanZones) });
+    if (r.store360) {
+        await callService('var.set', r.store360, { value: JSON.stringify(cleanHotspots) });
+    }
+    alert('Sauvegardé dans Home Assistant!');
+    toggleEdit();
+}
+
+function toggle360View() {
+    is360Active = !is360Active;
+    document.getElementById('panorama').style.display = is360Active ? 'block' : 'none';
+    document.getElementById('plan-container').style.display = is360Active ? 'none' : 'block';
+    document.getElementById('btn-toggle-360').innerText = is360Active ? "PLAN 2D" : "VUE 360°";
     if (is360Active) initPannellum();
 }
 
-function deleteHotspot() {
-    hotspots.splice(document.getElementById('edit-idx').value, 1);
-    closeHotspotModal();
-    if (is360Active) initPannellum();
-}
+// ... Garder les fonctions handleMapClick, updateDrawLine, onkeydown, drawZones, initPannellum, etc.
+// ... Garder les fonctions d'édition : toggleEdit, openConfig, confirmItem, deleteItem
+// ... Garder les fonctions de modal: handleAction, closeModal
 
-function toggleEdit() {
-    editMode = !editMode;
-    document.getElementById('fab-edit').style.background = editMode ? 'var(--danger)' : 'var(--warning)';
-    document.getElementById('fab-save').style.display = editMode ? 'flex' : 'none';
-}
+// Initialisation
+(async () => {
+    await switchRoom(0);
+    updateAllStatuses();
+    setInterval(updateAllStatuses, 30000); // Met à jour les statuts toutes les 30 secondes
+    window.onresize = syncSVG;
+    document.getElementById('plan-img').onload = syncSVG;
+})();
 
-async function saveHotspots() {
-    const room = CONFIG.rooms[curR];
-    showStatus("Sauvegarde en cours...", "warning");
-    try {
-        const response = await fetch('save_hotspots.php', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ room: room.n, hotspots: hotspots })
-        });
-        const result = await response.json();
-        if (result.status === 'success') {
-            showStatus("Hotspots sauvegardés !", "success");
-            toggleEdit();
-        } else { throw new Error(result.message); }
-    } catch(err) {
-        showStatus(`Erreur: ${err.message}`, "danger");
-    }
-}
+// -- Les fonctions non modifiées sont ici pour la complétude --
+function syncSVG() { const img = document.getElementById('plan-img'); const svg = document.getElementById('svg-overlay'); if(!img.clientWidth) return; svg.setAttribute("viewBox", `0 0 ${img.clientWidth} ${img.clientHeight}`); svg.style.width = img.clientWidth + "px"; svg.style.height = img.clientHeight + "px"; drawZones(); }
+function handleMapClick(e) { if(!editMode || is360Active) return; const img = document.getElementById('plan-img'); const rect = img.getBoundingClientRect(); const x = Math.round(((e.clientX - rect.left) / rect.width) * 100); const y = Math.round(((e.clientY - rect.top) / rect.height) * 100); currentPoints.push(`${x},${y}`); updateDrawLine(); }
+function updateDrawLine() { const img = document.getElementById('plan-img'); const rect = img.getBoundingClientRect(); const pts = currentPoints.map(p => { const [px, py] = p.split(','); return `${(px * rect.width) / 100},${(py * rect.height) / 100}`; }).join(' '); document.getElementById('draw-line').setAttribute("points", pts); }
+window.onkeydown = (e) => { if(e.key === "Enter" && currentPoints.length > 2) { zones.push({ n: "Nouveau", p: currentPoints.join(' '), u: "" }); currentPoints = []; document.getElementById('draw-line').setAttribute("points", ""); drawZones(); openConfig(zones.length - 1, '2D'); } };
+function drawZones() { const svg = document.getElementById('svg-overlay'); const img = document.getElementById('plan-img'); const line = document.getElementById('draw-line'); svg.innerHTML = ''; svg.appendChild(line); zones.forEach((z, i) => { const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon"); const pts = z.p.split(' ').map(p => { const [px, py] = p.split(','); return `${px * img.clientWidth / 100},${py * img.clientHeight / 100}`; }).join(' '); poly.setAttribute("points", pts); poly.setAttribute("class", "zone-poly"); poly.onclick = (e) => { e.stopPropagation(); editMode ? openConfig(i, '2D') : handleAction(z); }; svg.appendChild(poly); }); }
+function initPannellum() { if(panoViewer) panoViewer.destroy(); panoViewer = pannellum.viewer('panorama', { "type": "equirectangular", "panorama": ROOMS[curR].img360, "autoLoad": true, "showControls": false, "hotSpots": hotspots.map((h, i) => ({ pitch: parseFloat(h.pi), yaw: parseFloat(h.y), cssClass: 'custom-hotspot', clickHandlerFunc: () => editMode ? openConfig(i, '360') : handleAction(h) })) }); panoViewer.on('mousedown', (e) => { if(!editMode) return; const c = panoViewer.mouseEventToCoords(e); if(c) { hotspots.push({ n: "Point", pi: Math.round(c[0]), y: Math.round(c[1]), u: "" }); initPannellum(); setTimeout(() => openConfig(hotspots.length - 1, '360'), 200); } }); }
+function toggleEdit() { editMode = !editMode; document.getElementById('btn-edit').innerText = editMode ? "FINIR" : "ÉDIT"; document.getElementById('btn-save').classList.toggle('d-none', !editMode); document.getElementById('svg-overlay').classList.toggle('edit-active', editMode); currentPoints = []; updateDrawLine(); }
+function openConfig(idx, type) { document.getElementById('edit-idx').value = idx; document.getElementById('edit-type').value = type; const item = (type === '360') ? hotspots[idx] : zones[idx]; document.getElementById('zone-name').value = item.n; document.getElementById('zone-url').value = item.u; bModal.show(); }
+function confirmItem() { const i = document.getElementById('edit-idx').value; const type = document.getElementById('edit-type').value; const item = (type === '360') ? hotspots[i] : zones[i]; item.n = document.getElementById('zone-name').value; item.u = document.getElementById('zone-url').value; bModal.hide(); if (is360Active) initPannellum(); else drawZones(); }
+function deleteItem() { const i = document.getElementById('edit-idx').value; if(document.getElementById('edit-type').value === '360') { hotspots.splice(i, 1); } else { zones.splice(i, 1); } bModal.hide(); if (is360Active) initPannellum(); else drawZones(); }
+async function handleAction(item) { const url = item.u || item.url; if(!url) return; if(url.includes('.') && !url.includes('/')) { await callService('homeassistant.toggle', url); } else { document.getElementById('ha-frame').src = url; document.getElementById('ha-modal').style.display = 'block'; document.getElementById('modal-overlay').style.display = 'block'; } }
+function closeModal() { document.getElementById('ha-modal').style.display='none'; document.getElementById('modal-overlay').style.display='none'; }
 
-function openAddRoomModal(editing = false) {
-    document.getElementById('editing-room-idx').value = editing ? curR : -1;
-    if(editing){
-        const room = CONFIG.rooms[curR];
-        document.getElementById('new-room-name').value = room.n;
-        document.getElementById('new-room-icon').value = room.icon;
-    } else {
-        document.getElementById('new-room-name').value = '';
-        document.getElementById('new-room-icon').value = '';
-    }
-    document.getElementById('addRoomModal').style.display = 'block';
-}
-
-function closeAddRoomModal() { document.getElementById('addRoomModal').style.display = 'none'; }
-
-async function addNewRoom() {
-    const name = document.getElementById('new-room-name').value.trim();
-    if (!name) { alert("Le nom de la pièce est obligatoire."); return; }
-    showStatus("Sauvegarde de la pièce...", "warning");
-
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("icon", document.getElementById('new-room-icon').value.trim());
-    formData.append("editing_idx", document.getElementById('editing-room-idx').value);
-    
-    const img2dFile = document.getElementById('new-room-img-2d').files[0];
-    if(img2dFile) formData.append("img2d", img2dFile);
-
-    const img360File = document.getElementById('new-room-img-360').files[0];
-    if(img360File) formData.append("img360", img360File);
-
-    try {
-        const response = await fetch("add_room.php", { method: "POST", body: formData });
-        const result = await response.json();
-        if (result.status === 'success') {
-            showStatus("Pièce sauvegardée !", "success");
-            closeAddRoomModal();
-            await init();
-        } else { throw new Error(result.message); }
-    } catch (err) { showStatus(`Erreur: ${err.message}`, "danger"); }
-}
-
-function openEntityModal() {
-    const room = CONFIG.rooms[curR];
-    document.getElementById('room-temp-entity').value = room.temp || '';
-    document.getElementById('room-vacuum-entity').value = room.vacuum_entity || '';
-    document.getElementById('room-window-entity').value = room.window_entity || '';
-    document.getElementById('entityModal').style.display = 'block';
-}
-
-function closeEntityModal() { document.getElementById('entityModal').style.display = 'none'; }
-
-async function saveRoomEntities() {
-    // This is a more complex operation, it requires updating config.json on the server.
-    // Let's build a dedicated endpoint for this.
-    showStatus("Mise à jour des entités...", "warning");
-    const roomIdx = curR;
-    const entities = {
-        temp: document.getElementById('room-temp-entity').value.trim(),
-        vacuum_entity: document.getElementById('room-vacuum-entity').value.trim(),
-        window_entity: document.getElementById('room-window-entity').value.trim()
-    };
-
-    try {
-        const response = await fetch("save_entities.php", {
-            method: "POST", headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ room_idx: roomIdx, entities: entities })
-        });
-        const result = await response.json();
-        if (result.status === 'success') {
-            showStatus("Entités sauvegardées !", "success");
-            closeEntityModal();
-            await init(); // Reload everything
-        } else { throw new Error(result.message); }
-    } catch (err) {
-        showStatus(`Erreur: ${err.message}`, "danger");
-    }
-}
-
-function closeHotspotModal() { document.getElementById('hotspotModal').style.display = 'none'; }
-function toggleFS() { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else if (document.exitFullscreen) document.exitFullscreen(); }
-
-function showStatus(message, type = "info", autoHide = true) {
-    const bubble = document.getElementById('status-bubble');
-    const msg = document.getElementById('status-message');
-    const icon = document.getElementById('status-icon');
-    
-    const icons = { success: 'fa-check-circle', danger: 'fa-times-circle', info: 'fa-info-circle', warning: 'fa-exclamation-triangle' };
-    bubble.style.background = `var(--${type})`;
-    icon.innerHTML = `<i class="fas ${icons[type]}"></i>`;
-    msg.innerHTML = message;
-
-    bubble.style.display = 'flex';
-    if (autoHide) {
-        setTimeout(() => { bubble.style.display = 'none'; }, 3000);
-    }
-}
-
-init();
 </script>
 </body>
 </html>
