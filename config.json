@@ -1,41 +1,52 @@
 {
     "ha_url": "https://qq5e0tspgj2a22alvsqitgptzj2sz0o4.ui.nabu.casa",
     "ha_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIyM2QwMGZhNDdhYzM0NTgzYmFlM2UzMGRiMWMwMzBjMyIsImlhdCI6MTc2OTQyNzk1MiwiZXhwIjoyMDg0Nzg3OTUyfQ.qCik3fu6D-CqVg6RVuoQjF4g8zbM2ZXtYu3LVxrGVEs",
+    "weather_entity": "weather.izon",
     "rooms": [
         {
             "n": "Cuisine",
             "icon": "🍳",
             "img": "Cuisine.jpg",
             "img360": "Cuisine__1.jpg",
-            "temp": "sensor.temperature_cuisine_2"
+            "temp": "sensor.temperature_cuisine_2",
+            "vacuum_entity": "button.eve_shortcut_5",
+            "window_entity": "binary_sensor.fenetre_cuisine_porte"
         },
         {
             "n": "Salon",
             "icon": "🛋️",
             "img": "Salon.jpg",
-            "img360": "Salon.jpg",
-            "temp": "sensor.temp_salon"
+            "img360": "",
+            "temp": "sensor.temp_salon",
+            "vacuum_entity": "button.eve_shortcut_6",
+            "window_entity": "binary_sensor.fenetre_salon_porte"
         },
         {
             "n": "Elisa",
             "icon": "🌸",
             "img": "Elisa.jpg",
-            "img360": "Elisa.jpg",
-            "temp": "sensor.current_temperature_chambre_elisa"
+            "img360": "",
+            "temp": "sensor.current_temperature_chambre_elisa",
+            "vacuum_entity": "button.eve_shortcut_2",
+            "window_entity": ""
         },
         {
             "n": "Justine",
             "icon": "⭐",
             "img": "Justine.jpg",
-            "img360": "Justine.jpg",
-            "temp": "sensor.sensor_temp_justine"
+            "img360": "",
+            "temp": "sensor.sensor_temp_justine",
+            "vacuum_entity": "button.eve_shortcut_3",
+            "window_entity": "binary_sensor.0xa4c138462fd3310c_contact"
         },
         {
             "n": "Parents",
             "icon": "👥",
             "img": "Chambreparents.jpg",
-            "img360": "Chambreparents.jpg",
-            "temp": "sensor.current_temperature_chambre_parent"
+            "img360": "",
+            "temp": "sensor.current_temperature_chambre_parent",
+            "vacuum_entity": "button.eve_shortcut_1",
+            "window_entity": ""
         }
     ]
 }

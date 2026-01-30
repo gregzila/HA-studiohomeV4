@@ -1,37 +1,63 @@
 <?php
 header('Content-Type: application/json');
 
-$input = json_decode(file_get_contents('php://input'), true);
+$response = ['status' => 'error', 'message' => 'An unknown error occurred.'];
 
-if (!isset($input['room']) || !isset($input['hotspots'])) {
-    http_response_code(400);
-    echo json_encode(['status' => 'error', 'message' => 'Invalid input.']);
-    exit;
-}
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
 
-$room = $input['room'];
-$hotspots = $input['hotspots'];
-$configFile = 'config_' . strtolower($room) . '.json';
+    if (!isset($input['room']) || !isset($input['hotspots'])) {
+        $response['message'] = 'Invalid input: room or hotspots missing.';
+        http_response_code(400);
+        echo json_encode($response);
+        exit;
+    }
 
-if (!file_exists($configFile)) {
-    http_response_code(404);
-    echo json_encode(['status' => 'error', 'message' => "Config file not found for room: {$room}"]);
-    exit;
-}
+    $roomName = $input['room'];
+    $hotspots = $input['hotspots'];
+    $configFile = 'config_' . strtolower($roomName) . '.json';
 
-$configData = json_decode(file_get_contents($configFile), true);
-if ($configData === null) {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => "Error reading or parsing config file: {$configFile}"]);
-    exit;
-}
+    if (!file_exists($configFile)) {
+        $response['message'] = "Config file not found for room: {$roomName}";
+        http_response_code(404);
+        echo json_encode($response);
+        exit;
+    }
 
-$configData['hotspots'] = $hotspots;
+    // Attempt to lock the file before writing
+    $fileHandle = fopen($configFile, 'r+');
+    if (flock($fileHandle, LOCK_EX)) {
+        $currentData = json_decode(fread($fileHandle, filesize($configFile)), true);
+        if ($currentData === null) {
+             // Handle JSON error if the file is corrupt
+            $currentData = []; // Or handle as an error
+        }
 
-if (file_put_contents($configFile, json_encode($configData, JSON_PRETTY_PRINT))) {
-    echo json_encode(['status' => 'success', 'message' => 'Hotspots saved successfully.']);
+        $currentData['hotspots'] = $hotspots;
+        $newJsonData = json_encode($currentData, JSON_PRETTY_PRINT);
+
+        // Go to the beginning of the file and truncate it before writing
+        ftruncate($fileHandle, 0);
+        rewind($fileHandle);
+        
+        if (fwrite($fileHandle, $newJsonData)) {
+            $response = ['status' => 'success', 'message' => 'Hotspots saved successfully.'];
+        } else {
+            $response['message'] = 'Failed to write to config file.';
+            http_response_code(500);
+        }
+        
+        flock($fileHandle, LOCK_UN); // Release the lock
+    } else {
+        $response['message'] = 'Could not get a lock on the config file.';
+        http_response_code(500);
+    }
+    fclose($fileHandle);
+
 } else {
-    http_response_code(500);
-    echo json_encode(['status' => 'error', 'message' => 'Failed to write to config file.']);
+    $response['message'] = 'Invalid request method.';
+    http_response_code(405);
 }
+
+echo json_encode($response);
 ?>
